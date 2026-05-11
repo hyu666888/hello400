@@ -1,1 +1,429 @@
-Burrow says Hello 400!
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Tasks</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --accent:       #6366f1;
+      --accent-light: #eef2ff;
+      --accent-dark:  #4f46e5;
+      --bg:           #f3f4f6;
+      --surface:      #ffffff;
+      --border:       #e5e7eb;
+      --text:         #111827;
+      --text-2:       #6b7280;
+      --muted:        #9ca3af;
+      --danger:       #ef4444;
+      --danger-bg:    #fef2f2;
+      --radius:       12px;
+      --shadow:       0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.05);
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100dvh;
+      padding-bottom: max(env(safe-area-inset-bottom), 32px);
+    }
+
+    /* ── Sticky header ── */
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 16px 14px;
+      padding-top: max(env(safe-area-inset-top), 16px);
+    }
+
+    .header-inner {
+      max-width: 480px;
+      margin: 0 auto;
+    }
+
+    .app-title {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+      color: var(--text);
+      margin-bottom: 12px;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .task-input {
+      flex: 1;
+      min-width: 0;
+      height: 48px;
+      padding: 0 14px;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      font-size: 16px;       /* prevents iOS auto-zoom */
+      color: var(--text);
+      background: var(--bg);
+      outline: none;
+      transition: border-color 0.15s, background 0.15s;
+    }
+
+    .task-input:focus {
+      border-color: var(--accent);
+      background: var(--surface);
+    }
+
+    .task-input::placeholder { color: var(--muted); }
+
+    .add-btn {
+      height: 48px;
+      padding: 0 20px;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+      transition: background 0.15s, transform 0.1s;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .add-btn:active { background: var(--accent-dark); transform: scale(0.97); }
+
+    /* ── Main wrapper ── */
+    .main {
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 0 12px;
+    }
+
+    /* ── Filter row ── */
+    .filter-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 12px 0 8px;
+    }
+
+    .filter-group {
+      display: flex;
+      gap: 4px;
+      flex: 1;
+    }
+
+    .filter-btn {
+      height: 36px;
+      padding: 0 13px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      background: transparent;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-2);
+      cursor: pointer;
+      transition: background 0.12s, color 0.12s, border-color 0.12s;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .filter-btn.active {
+      background: var(--accent-light);
+      color: var(--accent);
+      border-color: var(--accent);
+      font-weight: 600;
+    }
+
+    .filter-btn:not(.active):active { background: var(--border); }
+
+    .clear-btn {
+      height: 36px;
+      padding: 0 12px;
+      border: none;
+      border-radius: 8px;
+      background: transparent;
+      font-size: 13px;
+      color: var(--muted);
+      cursor: pointer;
+      transition: color 0.12s, background 0.12s;
+      -webkit-tap-highlight-color: transparent;
+      white-space: nowrap;
+    }
+
+    .clear-btn:hover { color: var(--danger); background: var(--danger-bg); }
+    .clear-btn:active { color: #dc2626; }
+
+    /* ── Task list ── */
+    .task-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .task-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 0 10px 0 12px;
+      min-height: 54px;
+      box-shadow: var(--shadow);
+    }
+
+    .task-item.done { opacity: 0.68; }
+
+    /* Custom checkbox */
+    .task-cb {
+      appearance: none;
+      -webkit-appearance: none;
+      width: 22px;
+      height: 22px;
+      border: 2px solid var(--border);
+      border-radius: 6px;
+      cursor: pointer;
+      flex-shrink: 0;
+      position: relative;
+      transition: background 0.15s, border-color 0.15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .task-cb:checked {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+
+    .task-cb:checked::after {
+      content: '';
+      position: absolute;
+      left: 5px;
+      top: 2px;
+      width: 7px;
+      height: 11px;
+      border: 2px solid #fff;
+      border-top: none;
+      border-left: none;
+      transform: rotate(45deg);
+    }
+
+    .task-text {
+      flex: 1;
+      font-size: 15px;
+      line-height: 1.45;
+      word-break: break-word;
+      padding: 14px 0;
+      transition: color 0.15s, text-decoration 0.15s;
+    }
+
+    .task-item.done .task-text {
+      text-decoration: line-through;
+      color: var(--muted);
+    }
+
+    .del-btn {
+      width: 36px;
+      height: 36px;
+      flex-shrink: 0;
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      font-size: 20px;
+      cursor: pointer;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: color 0.12s, background 0.12s;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .del-btn:hover  { color: var(--danger); background: var(--danger-bg); }
+    .del-btn:active { color: #dc2626; }
+
+    /* ── Empty state ── */
+    .empty-state {
+      text-align: center;
+      color: var(--muted);
+      font-size: 14px;
+      padding: 40px 0;
+    }
+
+    /* ── Footer ── */
+    .footer {
+      padding: 14px 0 0;
+      text-align: center;
+      font-size: 13px;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+
+  <header class="header">
+    <div class="header-inner">
+      <p class="app-title">Tasks</p>
+      <div class="input-row">
+        <input
+          type="text"
+          id="task-input"
+          class="task-input"
+          placeholder="What needs doing?"
+          autocomplete="off"
+          autocorrect="on"
+          spellcheck="true"
+          maxlength="500"
+          enterkeyhint="done"
+        >
+        <button id="add-btn" class="add-btn">Add</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="main">
+    <div class="filter-row">
+      <div class="filter-group">
+        <button class="filter-btn active" data-filter="all">All</button>
+        <button class="filter-btn"        data-filter="active">Active</button>
+        <button class="filter-btn"        data-filter="done">Done</button>
+      </div>
+      <button id="clear-done" class="clear-btn">Clear done</button>
+    </div>
+
+    <ul class="task-list" id="task-list" role="list" aria-label="Task list"></ul>
+
+    <footer class="footer">
+      <span id="footer-count"></span>
+    </footer>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'tasks-v1';
+
+    let tasks = [];
+    let filter = 'all';
+
+    function load() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        const parsed = raw ? JSON.parse(raw) : [];
+        tasks = Array.isArray(parsed) ? parsed : [];
+      } catch { tasks = []; }
+    }
+
+    function save() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+    }
+
+    function addTask(text) {
+      text = text.trim();
+      if (!text) return;
+      tasks.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2), text, done: false });
+      save();
+      render();
+    }
+
+    function toggleTask(id) {
+      const t = tasks.find(t => t.id === id);
+      if (t) { t.done = !t.done; save(); render(); }
+    }
+
+    function deleteTask(id) {
+      tasks = tasks.filter(t => t.id !== id);
+      save();
+      render();
+    }
+
+    function clearDone() {
+      tasks = tasks.filter(t => !t.done);
+      save();
+      render();
+    }
+
+    const EMPTY = {
+      all:    'No tasks yet — add one above.',
+      active: 'No active tasks.',
+      done:   'No completed tasks.',
+    };
+
+    function render() {
+      const list = document.getElementById('task-list');
+      while (list.firstChild) list.removeChild(list.firstChild);
+
+      const visible = tasks.filter(t =>
+        filter === 'active' ? !t.done :
+        filter === 'done'   ?  t.done : true
+      );
+
+      if (visible.length === 0) {
+        const li = document.createElement('li');
+        li.className = 'empty-state';
+        li.textContent = EMPTY[filter];
+        list.appendChild(li);
+      } else {
+        visible.forEach(task => {
+          const li = document.createElement('li');
+          li.className = 'task-item' + (task.done ? ' done' : '');
+
+          const cb = document.createElement('input');
+          cb.type = 'checkbox';
+          cb.className = 'task-cb';
+          cb.checked = task.done;
+          cb.setAttribute('aria-label', task.done ? 'Mark as active' : 'Mark as done');
+          cb.addEventListener('change', () => toggleTask(task.id));
+
+          const span = document.createElement('span');
+          span.className = 'task-text';
+          span.textContent = task.text;
+
+          const btn = document.createElement('button');
+          btn.className = 'del-btn';
+          btn.textContent = '×';
+          btn.setAttribute('aria-label', 'Delete task');
+          btn.addEventListener('click', () => deleteTask(task.id));
+
+          li.append(cb, span, btn);
+          list.appendChild(li);
+        });
+      }
+
+      const left = tasks.filter(t => !t.done).length;
+      document.getElementById('footer-count').textContent =
+        left === 1 ? '1 task left' : `${left} tasks left`;
+
+      document.querySelectorAll('.filter-btn').forEach(b =>
+        b.classList.toggle('active', b.dataset.filter === filter)
+      );
+    }
+
+    /* ── Init ── */
+    load();
+    render();
+
+    const inp = document.getElementById('task-input');
+
+    document.getElementById('add-btn').addEventListener('click', () => {
+      addTask(inp.value);
+      inp.value = '';
+      inp.focus();
+    });
+
+    inp.addEventListener('keydown', e => {
+      if (e.key === 'Enter') { addTask(inp.value); inp.value = ''; }
+    });
+
+    document.querySelectorAll('.filter-btn').forEach(b =>
+      b.addEventListener('click', () => { filter = b.dataset.filter; render(); })
+    );
+
+    document.getElementById('clear-done').addEventListener('click', clearDone);
+  </script>
+</body>
+</html>

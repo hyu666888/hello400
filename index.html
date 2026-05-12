@@ -19,6 +19,12 @@
       --muted:        #9ca3af;
       --danger:       #ef4444;
       --danger-bg:    #fef2f2;
+      --p-high:       #ef4444;
+      --p-high-bg:    #fef2f2;
+      --p-med:        #f59e0b;
+      --p-med-bg:     #fffbeb;
+      --p-low:        #10b981;
+      --p-low-bg:     #ecfdf5;
       --radius:       12px;
       --shadow:       0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.05);
     }
@@ -42,10 +48,7 @@
       padding-top: max(env(safe-area-inset-top), 16px);
     }
 
-    .header-inner {
-      max-width: 480px;
-      margin: 0 auto;
-    }
+    .header-inner { max-width: 480px; margin: 0 auto; }
 
     .app-title {
       font-size: 18px;
@@ -55,10 +58,7 @@
       margin-bottom: 12px;
     }
 
-    .input-row {
-      display: flex;
-      gap: 8px;
-    }
+    .input-row { display: flex; gap: 8px; margin-bottom: 8px; }
 
     .task-input {
       flex: 1;
@@ -67,18 +67,14 @@
       padding: 0 14px;
       border: 1.5px solid var(--border);
       border-radius: 10px;
-      font-size: 16px;       /* prevents iOS auto-zoom */
+      font-size: 16px;
       color: var(--text);
       background: var(--bg);
       outline: none;
       transition: border-color 0.15s, background 0.15s;
     }
 
-    .task-input:focus {
-      border-color: var(--accent);
-      background: var(--surface);
-    }
-
+    .task-input:focus { border-color: var(--accent); background: var(--surface); }
     .task-input::placeholder { color: var(--muted); }
 
     .add-btn {
@@ -99,12 +95,34 @@
 
     .add-btn:active { background: var(--accent-dark); transform: scale(0.97); }
 
-    /* ── Main wrapper ── */
-    .main {
-      max-width: 480px;
-      margin: 0 auto;
-      padding: 0 12px;
+    /* ── Add-options row ── */
+    .add-options {
+      display: flex;
+      gap: 8px;
+      align-items: center;
     }
+
+    .priority-select, .date-input {
+      height: 36px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 13px;
+      padding: 0 10px;
+      outline: none;
+      cursor: pointer;
+      transition: border-color 0.15s;
+    }
+
+    .priority-select { min-width: 120px; }
+
+    .priority-select:focus, .date-input:focus { border-color: var(--accent); }
+
+    .date-input { flex: 1; min-width: 0; color-scheme: light; }
+
+    /* ── Main wrapper ── */
+    .main { max-width: 480px; margin: 0 auto; padding: 0 12px; }
 
     /* ── Filter row ── */
     .filter-row {
@@ -114,11 +132,7 @@
       padding: 12px 0 8px;
     }
 
-    .filter-group {
-      display: flex;
-      gap: 4px;
-      flex: 1;
-    }
+    .filter-group { display: flex; gap: 4px; flex: 1; }
 
     .filter-btn {
       height: 36px;
@@ -170,16 +184,20 @@
 
     .task-item {
       display: flex;
-      align-items: center;
-      gap: 12px;
+      align-items: flex-start;
+      gap: 10px;
       background: var(--surface);
       border-radius: var(--radius);
-      padding: 0 10px 0 12px;
-      min-height: 54px;
+      padding: 10px 10px 10px 12px;
       box-shadow: var(--shadow);
+      border-left: 3px solid transparent;
+      transition: border-color 0.15s, opacity 0.15s;
     }
 
-    .task-item.done { opacity: 0.68; }
+    .task-item.done { opacity: 0.62; }
+    .task-item.p-high { border-left-color: var(--p-high); }
+    .task-item.p-med  { border-left-color: var(--p-med); }
+    .task-item.p-low  { border-left-color: var(--p-low); }
 
     /* Custom checkbox */
     .task-cb {
@@ -192,14 +210,12 @@
       cursor: pointer;
       flex-shrink: 0;
       position: relative;
+      margin-top: 1px;
       transition: background 0.15s, border-color 0.15s;
       -webkit-tap-highlight-color: transparent;
     }
 
-    .task-cb:checked {
-      background: var(--accent);
-      border-color: var(--accent);
-    }
+    .task-cb:checked { background: var(--accent); border-color: var(--accent); }
 
     .task-cb:checked::after {
       content: '';
@@ -214,23 +230,77 @@
       transform: rotate(45deg);
     }
 
+    /* Task body */
+    .task-body { flex: 1; min-width: 0; }
+
     .task-text {
-      flex: 1;
       font-size: 15px;
       line-height: 1.45;
       word-break: break-word;
-      padding: 14px 0;
       transition: color 0.15s, text-decoration 0.15s;
+      border-radius: 4px;
+      padding: 1px 3px;
+      margin: -1px -3px;
     }
 
     .task-item.done .task-text {
       text-decoration: line-through;
       color: var(--muted);
+      cursor: default;
     }
 
+    .task-item:not(.done) .task-text { cursor: pointer; }
+    .task-item:not(.done) .task-text:hover:not(.editing) { background: var(--bg); }
+
+    .task-edit-input {
+      width: 100%;
+      font-size: 15px;
+      line-height: 1.45;
+      font-family: inherit;
+      color: var(--text);
+      background: var(--bg);
+      border: 1.5px solid var(--accent);
+      border-radius: 6px;
+      padding: 3px 8px;
+      outline: none;
+    }
+
+    /* Meta row (priority badge + due date) */
+    .task-meta {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 5px;
+      flex-wrap: wrap;
+    }
+
+    .priority-badge {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: 20px;
+      letter-spacing: 0.3px;
+      text-transform: uppercase;
+    }
+
+    .badge-high { background: var(--p-high-bg); color: var(--p-high); }
+    .badge-med  { background: var(--p-med-bg);  color: var(--p-med); }
+    .badge-low  { background: var(--p-low-bg);  color: var(--p-low); }
+
+    .due-label {
+      font-size: 12px;
+      color: var(--text-2);
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+
+    .due-label.overdue { color: var(--danger); font-weight: 600; }
+    .due-label.today   { color: var(--p-med);  font-weight: 600; }
+
     .del-btn {
-      width: 36px;
-      height: 36px;
+      width: 34px;
+      height: 34px;
       flex-shrink: 0;
       border: none;
       background: transparent;
@@ -243,6 +313,7 @@
       justify-content: center;
       transition: color 0.12s, background 0.12s;
       -webkit-tap-highlight-color: transparent;
+      margin-top: -2px;
     }
 
     .del-btn:hover  { color: var(--danger); background: var(--danger-bg); }
@@ -262,6 +333,15 @@
       text-align: center;
       font-size: 13px;
       color: var(--muted);
+    }
+
+    /* ── Edit hint ── */
+    .edit-hint {
+      font-size: 11px;
+      color: var(--muted);
+      text-align: center;
+      padding: 4px 0 0;
+      opacity: 0.8;
     }
   </style>
 </head>
@@ -284,6 +364,15 @@
         >
         <button id="add-btn" class="add-btn">Add</button>
       </div>
+      <div class="add-options">
+        <select id="priority-select" class="priority-select">
+          <option value="">No priority</option>
+          <option value="high">🔴 High</option>
+          <option value="med">🟡 Medium</option>
+          <option value="low">🟢 Low</option>
+        </select>
+        <input type="date" id="due-date" class="date-input" title="Due date">
+      </div>
     </div>
   </header>
 
@@ -299,13 +388,15 @@
 
     <ul class="task-list" id="task-list" role="list" aria-label="Task list"></ul>
 
+    <p class="edit-hint">Tap task text to edit</p>
+
     <footer class="footer">
       <span id="footer-count"></span>
     </footer>
   </div>
 
   <script>
-    const STORAGE_KEY = 'tasks-v1';
+    const STORAGE_KEY = 'tasks-v2';
 
     let tasks = [];
     let filter = 'all';
@@ -322,10 +413,16 @@
       localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
     }
 
-    function addTask(text) {
+    function addTask(text, priority, due) {
       text = text.trim();
       if (!text) return;
-      tasks.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2), text, done: false });
+      tasks.push({
+        id: Date.now().toString(36) + Math.random().toString(36).slice(2),
+        text,
+        done: false,
+        priority: priority || '',
+        due: due || '',
+      });
       save();
       render();
     }
@@ -347,11 +444,60 @@
       render();
     }
 
+    function updateTaskText(id, newText) {
+      newText = newText.trim();
+      if (!newText) return;
+      const t = tasks.find(t => t.id === id);
+      if (t) { t.text = newText; save(); render(); }
+    }
+
+    /* ── Due date helpers ── */
+    function today() {
+      return new Date().toISOString().slice(0, 10);
+    }
+
+    function dueLabelInfo(due) {
+      if (!due) return null;
+      const t = today();
+      if (due < t)  return { label: `Overdue · ${formatDate(due)}`, cls: 'overdue' };
+      if (due === t) return { label: `Due today`,                    cls: 'today' };
+      return { label: `Due ${formatDate(due)}`, cls: '' };
+    }
+
+    function formatDate(iso) {
+      const [y, m, d] = iso.split('-');
+      const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      return `${months[parseInt(m,10)-1]} ${parseInt(d,10)}`;
+    }
+
     const EMPTY = {
       all:    'No tasks yet — add one above.',
       active: 'No active tasks.',
       done:   'No completed tasks.',
     };
+
+    function startEdit(task, spanEl) {
+      spanEl.classList.add('editing');
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.className = 'task-edit-input';
+      input.value = task.text;
+      spanEl.replaceWith(input);
+      input.focus();
+      input.select();
+
+      function commit() {
+        const val = input.value.trim();
+        if (val && val !== task.text) updateTaskText(task.id, val);
+        else render();
+      }
+
+      input.addEventListener('blur', commit);
+      input.addEventListener('keydown', e => {
+        if (e.key === 'Enter')  { input.blur(); }
+        if (e.key === 'Escape') { input.removeEventListener('blur', commit); render(); }
+      });
+    }
 
     function render() {
       const list = document.getElementById('task-list');
@@ -370,8 +516,10 @@
       } else {
         visible.forEach(task => {
           const li = document.createElement('li');
-          li.className = 'task-item' + (task.done ? ' done' : '');
+          const pClass = task.priority ? ` p-${task.priority}` : '';
+          li.className = 'task-item' + (task.done ? ' done' : '') + pClass;
 
+          /* checkbox */
           const cb = document.createElement('input');
           cb.type = 'checkbox';
           cb.className = 'task-cb';
@@ -379,17 +527,53 @@
           cb.setAttribute('aria-label', task.done ? 'Mark as active' : 'Mark as done');
           cb.addEventListener('change', () => toggleTask(task.id));
 
+          /* body */
+          const body = document.createElement('div');
+          body.className = 'task-body';
+
           const span = document.createElement('span');
           span.className = 'task-text';
           span.textContent = task.text;
+          if (!task.done) span.title = 'Tap to edit';
+          span.addEventListener('click', () => { if (!task.done) startEdit(task, span); });
 
+          body.appendChild(span);
+
+          /* meta row */
+          const hasMeta = task.priority || task.due;
+          if (hasMeta) {
+            const meta = document.createElement('div');
+            meta.className = 'task-meta';
+
+            if (task.priority) {
+              const badge = document.createElement('span');
+              badge.className = `priority-badge badge-${task.priority}`;
+              badge.textContent = task.priority === 'high' ? 'High'
+                                : task.priority === 'med'  ? 'Medium' : 'Low';
+              meta.appendChild(badge);
+            }
+
+            if (task.due) {
+              const info = dueLabelInfo(task.due);
+              if (info) {
+                const due = document.createElement('span');
+                due.className = `due-label ${info.cls}`;
+                due.textContent = (info.cls === 'overdue' ? '⚠ ' : '📅 ') + info.label;
+                meta.appendChild(due);
+              }
+            }
+
+            body.appendChild(meta);
+          }
+
+          /* delete */
           const btn = document.createElement('button');
           btn.className = 'del-btn';
           btn.textContent = '×';
           btn.setAttribute('aria-label', 'Delete task');
           btn.addEventListener('click', () => deleteTask(task.id));
 
-          li.append(cb, span, btn);
+          li.append(cb, body, btn);
           list.appendChild(li);
         });
       }
@@ -408,15 +592,21 @@
     render();
 
     const inp = document.getElementById('task-input');
+    const prioSel = document.getElementById('priority-select');
+    const dateSel = document.getElementById('due-date');
 
-    document.getElementById('add-btn').addEventListener('click', () => {
-      addTask(inp.value);
+    function doAdd() {
+      addTask(inp.value, prioSel.value, dateSel.value);
       inp.value = '';
+      prioSel.value = '';
+      dateSel.value = '';
       inp.focus();
-    });
+    }
+
+    document.getElementById('add-btn').addEventListener('click', doAdd);
 
     inp.addEventListener('keydown', e => {
-      if (e.key === 'Enter') { addTask(inp.value); inp.value = ''; }
+      if (e.key === 'Enter') doAdd();
     });
 
     document.querySelectorAll('.filter-btn').forEach(b =>
